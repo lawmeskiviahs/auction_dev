@@ -1,0 +1,25 @@
+[package]
+name = "auction_test_0"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "auction_test_0"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[profile.release]
+overflow-checks = true
+
+[dependencies]
+anchor-lang = "0.24.2"
+solana-program = "1.9.22"
+spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
+anchor-spl = "0.24.2"

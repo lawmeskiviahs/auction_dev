@@ -1,0 +1,14 @@
+[features]
+seeds = false
+[programs.devnet]
+auction = "61reie38A5ecZQ45ebeeCcQgBQ82NtA7h59jPLCzx6mK"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "testnet"
+wallet = "/home/user/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
