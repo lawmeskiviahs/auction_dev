@@ -53,12 +53,12 @@ describe("auction", () => {
       programId
     );
 
-    // const tx = await program.methods.createAuction(price, bump).accounts({
-    //   auctionAccount: auctionAccount,
-    //   seller: seller.publicKey,
-    //   mint: mint.publicKey,
-    //   systemProgram: web3.SystemProgram.programId,
-    // }).signers([seller]).rpc();
+    const tx = await program.methods.createAuction(price, bump).accounts({
+      auctionAccount: auctionAccount,
+      seller: seller.publicKey,
+      mint: mint.publicKey,
+      systemProgram: web3.SystemProgram.programId,
+    }).signers([seller]).rpc();
     console.log("Your transaction signature", program);
   });
 });
