@@ -7,7 +7,7 @@ auction = "61reie38A5ecZQ45ebeeCcQgBQ82NtA7h59jPLCzx6mK"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "testnet"
+cluster = "devnet"
 wallet = "/home/user/.config/solana/id.json"
 
 [scripts]
