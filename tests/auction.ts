@@ -20,7 +20,7 @@ describe("auction", () => {
     const programId = new anchor.web3.PublicKey("61reie38A5ecZQ45ebeeCcQgBQ82NtA7h59jPLCzx6mK");
     const AUCTION_SIGNER_SEEDS = "testhuehuehuetest";
 
-    const vault = web3.Keypair.generate();
+    // const vault = web3.Keypair.generate();
     const seller = web3.Keypair.generate();
     const mint = new web3.PublicKey("9263LwjEN9zfdpGuVvWDD8fFvabgXsVWHQKQdUVELv4W");
 
@@ -45,7 +45,7 @@ describe("auction", () => {
       auctionAccount: auctionAccount,
       seller: seller.publicKey,
       mint: mint,
-      systemProgram: web3.SystemProgram.programId,
+      // systemProgram: web3.SystemProgram.programId,
     }).signers([seller]).rpc();
 
     console.log("Your transaction signature", program);

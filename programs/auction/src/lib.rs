@@ -1,9 +1,11 @@
 use anchor_lang::prelude::*;
 use solana_program::{
     system_program,
+    program::invoke,
+    system_instruction,
 };
 
-declare_id!("61reie38A5ecZQ45ebeeCcQgBQ82NtA7h59jPLCzx6mK");
+declare_id!("ARwpwhLekSLvjZyphHWUVka2CRLc7aW4JHtXrifbnX1k");
 
 const AUCTION_SIGNER_SEEDS: &str = "testhuehuehuetest";
 
@@ -11,7 +13,7 @@ const AUCTION_SIGNER_SEEDS: &str = "testhuehuehuetest";
 pub mod auction {
     use super::*;
 
-    pub fn create_auction(ctx: Context<CreateAuction>, price:u64, _bump:u8) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialze>, price:u64, _bump:u8) -> Result<()> {
 
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
         msg!("Pda account created");
@@ -29,6 +31,21 @@ pub mod auction {
         Ok(())
     }
 
+    pub fn create_auction(ctx: Context<CreateAuction>, price:u64, _bump:u8) -> Result<()> {
+
+        let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
+        
+        auction_account.seller = *ctx.accounts.seller.key;
+        auction_account.cost = price;
+        auction_account.mint = *ctx.accounts.mint.key;
+        auction_account.is_on_sale = true;
+        
+        msg!("Pda account fetch on create auction");
+        msg!("PDA {:?}", auction_account.seller);
+
+        Ok(())
+    }
+
     pub fn buy_nft(ctx: Context<BuyNFT>, _bump:u8) -> Result<()> {
 
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
@@ -40,11 +57,23 @@ pub mod auction {
 
         Ok(())
     }
+
+    pub fn transfer_lamports(ctx: Context<TransferSOL>) -> Result<()> {
+        
+        let amount = 10000000;
+
+        invoke(
+            &system_instruction::transfer(ctx.accounts.from_account.key, ctx.accounts.to_account.key, amount),
+            &[ctx.accounts.from_account.clone(), ctx.accounts.to_account.clone()],
+        )?;
+        Ok(())
+    }
+
 }
 
 #[derive(Accounts)]
 #[instruction(bump:u8)]
-pub struct CreateAuction<'info> {
+pub struct Initialze<'info> {
     #[account(
         init, 
         payer = seller, 
@@ -70,6 +99,31 @@ pub struct CreateAuction<'info> {
 
 #[derive(Accounts)]
 #[instruction(bump:u8)]
+pub struct CreateAuction<'info> {
+    #[account(
+    mut,
+    seeds = [
+        "auction".as_bytes(),
+        program_id.as_ref(),
+        mint.key().as_ref(),
+        AUCTION_SIGNER_SEEDS.as_bytes(),
+    ],
+    bump,
+    )]
+    auction_account: Account<'info, AuctionManager>,
+    #[account(mut, signer)]
+    /// CHECK XYZ
+    seller:AccountInfo<'info>,
+    #[account(mut, constraint = mint.key() == auction_account.mint.key())]
+    /// CHECK checked in program
+    mint:AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK XYZ
+    buyer: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(bump:u8)]
 pub struct BuyNFT<'info> {
     #[account(
     mut,
@@ -85,10 +139,21 @@ pub struct BuyNFT<'info> {
     #[account(mut, constraint = mint.key() == auction_account.mint.key())]
     /// CHECK checked in program
     mint:AccountInfo<'info>,
-    
     #[account(mut)]
     /// CHECK XYZ
     buyer: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct TransferSOL<'info> {
+    #[account(mut)]
+    /// CHECK XYZ
+    pub from_account: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK XYZ
+    pub to_account: AccountInfo<'info>,
+    /// CHECK XYZ
+    pub system_program: AccountInfo<'info>,
 }
 
 #[account]
