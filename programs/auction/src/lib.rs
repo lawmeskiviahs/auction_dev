@@ -1,14 +1,11 @@
 use anchor_lang::prelude::*;
 use solana_program::{
-    // program::invoke,
-    // system_instruction,
     system_program,
 };
 
 declare_id!("61reie38A5ecZQ45ebeeCcQgBQ82NtA7h59jPLCzx6mK");
 
 const AUCTION_SIGNER_SEEDS: &str = "testhuehuehuetest";
-// const OUR_WALLET: &str = "";
 
 #[program]
 pub mod auction {
