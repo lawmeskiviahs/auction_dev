@@ -96,7 +96,6 @@ pub struct CreateAuction<'info> {
     #[account(mut, signer)]
     /// CHECK XYZ
     seller:AccountInfo<'info>,
-    // #[account(mut, constraint = mint.key() == auction_account.mint.key())]
     /// CHECK checked in program
     mint:AccountInfo<'info>,
     #[account(mut)]
