@@ -41,6 +41,15 @@ pub mod auction {
 
         Ok(())
     }
+    
+    pub fn end_auction(ctx: Context<EndAuction>, _bump:u8) -> Result<()> {
+
+        let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
+        auction_account.is_on_sale = false;
+        
+
+        Ok(())
+    }
 
 }
 
@@ -114,6 +123,24 @@ pub struct BuyNFT<'info> {
     #[account(mut)]
     /// CHECK XYZ
     buyer: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(bump:u8)]
+pub struct EndAuction<'info> {
+    #[account(
+    mut,
+    seeds = [
+        "auction".as_bytes(),
+        program_id.as_ref(),
+        mint.key().as_ref(),
+        AUCTION_SIGNER_SEEDS.as_bytes(),
+    ],
+    bump,
+    )]
+    auction_account: Account<'info, AuctionManager>,
+    /// CHECK checked in program
+    mint:AccountInfo<'info>,
 }
 
 #[account]
