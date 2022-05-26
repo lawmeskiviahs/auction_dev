@@ -98,9 +98,6 @@ pub struct CreateAuction<'info> {
     seller:AccountInfo<'info>,
     /// CHECK checked in program
     mint:AccountInfo<'info>,
-    #[account(mut)]
-    /// CHECK XYZ
-    buyer: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
