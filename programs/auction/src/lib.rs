@@ -13,16 +13,16 @@ const AUCTION_SIGNER_SEEDS: &str = "testhuehuehuetest";
 pub mod auction {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialze>, price:u32, _bump:u8) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialze>, price:u64, _bump:u8) -> Result<()> {
 
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
         msg!("Pda account created");
 
        // auction_account.seller = ctx.accounts.seller.key.to_string();
-        auction_account.seller = "hello".to_string();
+        auction_account.seller = *ctx.accounts.seller.key;
 
         auction_account.cost = price;
-        auction_account.mint = ctx.accounts.mint.key.to_string();
+        auction_account.mint = *ctx.accounts.mint.key;
         auction_account.is_on_sale = true;
 
         msg!("Pda account initialized");
@@ -33,13 +33,13 @@ pub mod auction {
         Ok(())
     }
 
-    pub fn create_auction(ctx: Context<CreateAuction>, price:u32, _bump:u8) -> Result<()> {
+    pub fn create_auction(ctx: Context<CreateAuction>, price:u64, _bump:u8) -> Result<()> {
 
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
         
-        auction_account.seller = ctx.accounts.seller.key.to_string();
+        auction_account.seller = *ctx.accounts.seller.key;
         auction_account.cost = price;
-        auction_account.mint = ctx.accounts.mint.key.to_string();
+        auction_account.mint = *ctx.accounts.mint.key;
         auction_account.is_on_sale = true;
         
         msg!("Pda account fetch on create auction");
@@ -52,7 +52,7 @@ pub mod auction {
 
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
         
-        auction_account.buyer = ctx.accounts.buyer.key.to_string();
+        auction_account.buyer = *ctx.accounts.buyer.key;
         
         msg!("Pda account fetch");
         // msg!("PDA {}", auction_account.cost);
@@ -161,9 +161,9 @@ pub struct TransferSOL<'info> {
 #[account]
 #[derive(Default)]
 pub struct AuctionManager {
-    seller: String,
-    mint: String,
-    cost: u32,
-    buyer: String,
+    seller: Pubkey,
+    mint: Pubkey,
+    cost: u64,
+    buyer: Pubkey,
     is_on_sale: bool,
 }
