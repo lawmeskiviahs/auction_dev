@@ -1,12 +1,12 @@
 [package]
-name = "auction_test_2"
+name = "yaxche_auction"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "auction_test_2"
+name = "yaxche_auction"
 
 [features]
 no-entrypoint = []

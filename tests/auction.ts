@@ -17,8 +17,8 @@ describe("auction", () => {
 
   it("Is initialized!", async () => {
     
-    const programId = new anchor.web3.PublicKey("61reie38A5ecZQ45ebeeCcQgBQ82NtA7h59jPLCzx6mK");
-    const AUCTION_SIGNER_SEEDS = "testhuehuehuetest";
+    const programId = new anchor.web3.PublicKey("3fsYeopwx1UBtTD34PEdKVo5yvCw7jK7mKxsYWjxE76a");
+    const AUCTION_SIGNER_SEEDS = "yaxche";
 
     // const vault = web3.Keypair.generate();
     const seller = web3.Keypair.generate();
