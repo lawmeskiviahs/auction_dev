@@ -1,7 +1,7 @@
 [features]
 seeds = false
 [programs.devnet]
-auction = "3fsYeopwx1UBtTD34PEdKVo5yvCw7jK7mKxsYWjxE76a"
+auction = "7DAxncVod4zUyHZDm4s2tNuZeg718nMBrEJP4dY9DZeq"
 
 [registry]
 url = "https://anchor.projectserum.com"
