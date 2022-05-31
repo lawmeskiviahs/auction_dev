@@ -1,8 +1,6 @@
 use anchor_lang::prelude::*;
 use solana_program::{
-    program::invoke,
     system_program,
-    // system_instruction
 };
 
 declare_id!("2b1sK3RkQBPPdLhJ67N2M7XiBj8gEX7ysPeGxadBQBRp");
@@ -34,24 +32,6 @@ pub mod auction {
         auction_account.cost = price;
         auction_account.mint = *ctx.accounts.mint.key;
         auction_account.is_on_sale = true;
-
-        let ix = spl_token::instruction::transfer(
-            ctx.accounts.token_program.key,
-            ctx.accounts.from_token_account.key,
-            ctx.accounts.to_token_account.key,
-            ctx.accounts.seller.key,
-            &[ctx.accounts.seller.key],
-            1,
-        )?;
-        invoke(
-            &ix,
-            &[
-                ctx.accounts.from_token_account.clone(),
-                ctx.accounts.to_token_account.clone(),
-                ctx.accounts.seller.clone(),
-                ctx.accounts.token_program.clone(),
-            ],
-        )?;
         
         Ok(())
     }
@@ -122,14 +102,6 @@ pub struct CreateAuction<'info> {
     seller:AccountInfo<'info>,
     /// CHECK checked in program
     mint:AccountInfo<'info>,
-    #[account(mut)]
-    /// CHECK xyz
-    pub from_token_account: AccountInfo<'info>,
-    #[account(mut)]
-    /// CHECK xyz
-    pub to_token_account: AccountInfo<'info>,
-    /// CHECK xyz
-    pub token_program: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
