@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 use solana_program::{
     system_program,
+    system_instruction,
+    program::invoke,
 };
 
 declare_id!("2b1sK3RkQBPPdLhJ67N2M7XiBj8gEX7ysPeGxadBQBRp");
@@ -44,11 +46,41 @@ pub mod auction {
 
         Ok(())
     }
+
+    pub fn bid(ctx: Context<Bid>, bid:u64,) -> Result<()> {
+
+        let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
+
+        msg!("Welcome to bid function");
+
+        if bid > auction_account.highest_bid {
+
+            msg!("Bid value checked and it currently is {}", auction_account.highest_bid);
+            auction_account.highest_bid=bid;
+            msg!("auction_account.highest_bid set to {}", auction_account.highest_bid);
+            auction_account.highest_bidder= ctx.accounts.bidder.key();
+            msg!("auction_account.highest_bidder set");
+
+        } 
+
+        msg!("Preparing to launch invoke");
+
+        invoke(
+            &system_instruction::transfer(ctx.accounts.bidder.key, ctx.accounts.vault.key, bid),
+            &[ctx.accounts.bidder.clone(), ctx.accounts.vault.clone()],
+        )?;
+
+        msg!("The line after invoke, please check funds. fn bid samapt hua");
+        
+        Ok(())
+    }
     
     pub fn end_auction(ctx: Context<EndAuction>, _bump:u8) -> Result<()> {
 
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
         auction_account.is_on_sale = false;
+        auction_account.cost = 0;
+        // auction_account.max_bid = 0;
         auction_account.primary_sale_happened = true;
         
 
@@ -63,7 +95,7 @@ pub struct Initialze<'info> {
     #[account(
         init, 
         payer = seller, 
-        space = 300,
+        space = 180,
         seeds = [
             "auction".as_bytes(),
             program_id.as_ref(),
@@ -87,7 +119,6 @@ pub struct Initialze<'info> {
 #[instruction(bump:u8)]
 pub struct CreateAuction<'info> {
     #[account(
-    mut,
     seeds = [
         "auction".as_bytes(),
         program_id.as_ref(),
@@ -97,7 +128,7 @@ pub struct CreateAuction<'info> {
     bump,
     )]
     auction_account: Account<'info, AuctionManager>,
-    #[account(mut, signer)]
+    #[account(signer)]
     /// CHECK XYZ
     seller:AccountInfo<'info>,
     /// CHECK checked in program
@@ -127,6 +158,30 @@ pub struct BuyNFT<'info> {
 
 #[derive(Accounts)]
 #[instruction(bump:u8)]
+pub struct Bid<'info> {
+    #[account(
+    mut,
+    seeds = [
+        "auction".as_bytes(),
+        program_id.as_ref(),
+        mint.key().as_ref(),
+        AUCTION_SIGNER_SEEDS.as_bytes(),
+    ],
+    bump,
+    )]
+    auction_account: Account<'info, AuctionManager>,
+    /// CHECK checked in program
+    mint:AccountInfo<'info>,
+    #[account(mut,signer)]
+    /// CHECK XYZ
+    bidder: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK XYZ
+    vault: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(bump:u8)]
 pub struct EndAuction<'info> {
     #[account(
     mut,
@@ -146,12 +201,14 @@ pub struct EndAuction<'info> {
 #[account]
 #[derive(Default)]
 pub struct AuctionManager {
-    seller: Pubkey,
-    mint: Pubkey,
-    cost: u64, // 64
-    buyer: Pubkey,
+    seller: Pubkey, // 32
+    mint: Pubkey, // 32
+    cost: u64, // 8
+    buyer: Pubkey, // 32
     is_on_sale: bool, // 1
-    royalty_percent:u8, // 8
-    royalty_owner: Pubkey,
-    primary_sale_happened: bool //1
+    royalty_percent:u8, // 1
+    royalty_owner: Pubkey, // 32
+    primary_sale_happened: bool, //1
+    highest_bid: u64, // 8
+    highest_bidder: Pubkey, // 32
 }
