@@ -1,9 +1,11 @@
 import * as anchor from "@project-serum/anchor";
-import { Program } from "@project-serum/anchor";
+import { Program, validateAccounts } from "@project-serum/anchor";
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 import { Auction } from "../target/types/auction";
 import * as web3 from "@solana/web3.js";
 import BN from "bn.js"
+import { program } from "@project-serum/anchor/dist/cjs/spl/token";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 describe("auction", () => {
 
@@ -40,8 +42,9 @@ describe("auction", () => {
       ],
       programId
     );
-
-    const tx = await program.methods.createAuction(price, bump).accounts({
+    const seller_basis_point:number = 10;
+    const royalty = new BN(seller_basis_point)
+    const tx = await program.methods.initialize(price, bump, seller_basis_point).accounts({
       auctionAccount: auctionAccount,
       seller: seller.publicKey,
       mint: mint,
@@ -49,5 +52,28 @@ describe("auction", () => {
     }).signers([seller]).rpc();
 
     console.log("Your transaction signature", program);
+
+    const txInit = await program.rpc.initialize(price, bump, royalty, {
+      accounts: {
+        auctionAccount: auctionAccount,
+        seller: wallet.publicKey,
+        mint: mint,
+        systemProgram: web3.SystemProgram.programId,
+      },
+    });
+
+     const txEndEnglishAuction = await program.rpc.endEnglishAuction(bump, {
+        accounts: {
+          auctionAccount: auctionAccount,
+          mint: mintKey,
+          toAccount: wallet.publicKey,
+          fromTokenAccount: fromTokenAccount,
+          toTokenAccount: toTokenAccount,
+          vault: vault.publicKey,
+          seller: account.seller,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: web3.SystemProgram.programId
+        },
+      });
   });
 });

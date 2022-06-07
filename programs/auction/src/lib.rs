@@ -57,6 +57,7 @@ pub mod auction {
 
             msg!("Bid value checked and it currently is {}", auction_account.highest_bid);
             auction_account.highest_bid=bid;
+            // auction_account.highest_bid+=bid;
             msg!("auction_account.highest_bid set to {}", auction_account.highest_bid);
             auction_account.highest_bidder= ctx.accounts.bidder.key();
             msg!("auction_account.highest_bidder set");
@@ -65,8 +66,9 @@ pub mod auction {
 
         msg!("Preparing to launch invoke");
 
+        let bid_to_lamports = bid * 1000000000;
         invoke(
-            &system_instruction::transfer(ctx.accounts.bidder.key, ctx.accounts.vault.key, bid),
+            &system_instruction::transfer(ctx.accounts.bidder.key, ctx.accounts.vault.key, bid_to_lamports),
             &[ctx.accounts.bidder.clone(), ctx.accounts.vault.clone()],
         )?;
 
@@ -83,6 +85,51 @@ pub mod auction {
         // auction_account.max_bid = 0;
         auction_account.primary_sale_happened = true;
         
+        Ok(())
+    }
+
+    pub fn end_english_auction(ctx: Context<EndEnglishAuction>, _bump:u8) -> Result<()> {
+
+        msg!("Welcome to end english auction function");
+        let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
+        let final_bid_to_lamports = auction_account.highest_bid * 1000000000;
+        msg!("final bid to lamports done {}", final_bid_to_lamports);
+
+        msg!("Checking condition and preparing to launch invoke to transfer sol");
+        if ctx.accounts.seller.key() == ctx.accounts.auction_account.seller {
+            msg!("inside if while transferring sol");
+        invoke(
+            &system_instruction::transfer(ctx.accounts.vault.key, &ctx.accounts.auction_account.seller, final_bid_to_lamports),
+            &[ctx.accounts.vault.clone(), ctx.accounts.seller.clone()],
+        )?;
+        }
+
+        msg!("Sol sent, maybe check your balance");
+        msg!("Checking conditions and preparing to launch invoke to transfer NFT");
+
+        if ctx.accounts.to_account.key() == ctx.accounts.auction_account.highest_bidder {
+            msg!("inside if while transferring NFT");
+        let ix = spl_token::instruction::transfer(
+            ctx.accounts.token_program.key,
+            ctx.accounts.from_token_account.key,
+            ctx.accounts.to_token_account.key,
+            ctx.accounts.vault.key,
+            &[ctx.accounts.vault.key],
+            1,
+        )?;
+        invoke(
+            &ix,
+            &[
+                ctx.accounts.from_token_account.clone(),
+                ctx.accounts.to_token_account.clone(),
+                ctx.accounts.vault.clone(),
+                ctx.accounts.token_program.clone(),
+            ],
+        )?;
+    }
+
+    msg!("NFT transfer done, kindly check you wallet");
+    msg!("End English Auction function ab samapt hua");
 
         Ok(())
     }
@@ -95,7 +142,7 @@ pub struct Initialze<'info> {
     #[account(
         init, 
         payer = seller, 
-        space = 180,
+        space = 300,
         seeds = [
             "auction".as_bytes(),
             program_id.as_ref(),
@@ -119,6 +166,7 @@ pub struct Initialze<'info> {
 #[instruction(bump:u8)]
 pub struct CreateAuction<'info> {
     #[account(
+    mut,
     seeds = [
         "auction".as_bytes(),
         program_id.as_ref(),
@@ -128,7 +176,7 @@ pub struct CreateAuction<'info> {
     bump,
     )]
     auction_account: Account<'info, AuctionManager>,
-    #[account(signer)]
+    #[account(mut,signer)]
     /// CHECK XYZ
     seller:AccountInfo<'info>,
     /// CHECK checked in program
@@ -178,6 +226,9 @@ pub struct Bid<'info> {
     #[account(mut)]
     /// CHECK XYZ
     vault: AccountInfo<'info>,
+    #[account(address = system_program::id())]
+    /// CHECK XYZ
+    system_program: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
@@ -196,6 +247,44 @@ pub struct EndAuction<'info> {
     auction_account: Account<'info, AuctionManager>,
     /// CHECK checked in program
     mint:AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(bump:u8)]
+pub struct EndEnglishAuction<'info> {
+    #[account(
+    mut,
+    seeds = [
+        "auction".as_bytes(),
+        program_id.as_ref(),
+        mint.key().as_ref(),
+        AUCTION_SIGNER_SEEDS.as_bytes(),
+    ],
+    bump,
+    )]
+    auction_account: Account<'info, AuctionManager>,
+    /// CHECK checked in program
+    mint:AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK xyy
+    pub to_account: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK xyz
+    pub from_token_account: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK xyz
+    pub to_token_account: AccountInfo<'info>,
+    #[account(signer,mut)]
+    /// CHECK XYZ
+    vault: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK XYZ
+    seller: AccountInfo<'info>,
+    /// CHECK xyz
+    pub token_program: AccountInfo<'info>,
+    #[account(address = system_program::id())]
+    /// CHECK XYZ
+    system_program: AccountInfo<'info>,
 }
 
 #[account]
