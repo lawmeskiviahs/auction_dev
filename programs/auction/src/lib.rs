@@ -15,7 +15,12 @@ pub mod auction {
 
     pub fn initialize(ctx: Context<Initialze>, price:u64, _bump:u8, royalty:u8) -> Result<()> {
 
+        msg!("Welcome to initialize function");
+
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
+
+        msg!("auctionAccount PDA loaded successfully");
+
         auction_account.seller = *ctx.accounts.seller.key;
         auction_account.cost = price;
         auction_account.mint = *ctx.accounts.mint.key;
@@ -24,17 +29,65 @@ pub mod auction {
         auction_account.royalty_percent = royalty;
         auction_account.primary_sale_happened = false;
 
+        msg!("Auction settings set, preparing to launch invoke");
+
+        let ix = spl_token::instruction::transfer(
+            ctx.accounts.token_program.key,
+            ctx.accounts.from_token_account.key,
+            ctx.accounts.to_token_account.key,
+            ctx.accounts.seller.key,
+            &[ctx.accounts.seller.key],
+            1,
+        )?;
+        invoke(
+            &ix,
+            &[
+                ctx.accounts.from_token_account.clone(),
+                ctx.accounts.to_token_account.clone(),
+                ctx.accounts.seller.clone(),
+                ctx.accounts.token_program.clone(),
+            ],
+        )?;
+
+        msg!("Invoke done, initialize function ab samapt hua");
+
         Ok(())
     }
 
     pub fn create_auction(ctx: Context<CreateAuction>, price:u64, _bump:u8) -> Result<()> {
 
+        msg!("Welcome to create auction function");
+
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
+
+        msg!("AuctionAccound pda loaded");
+
         auction_account.seller = *ctx.accounts.seller.key;
         auction_account.cost = price;
-        auction_account.mint = *ctx.accounts.mint.key;
         auction_account.is_on_sale = true;
+
+        msg!("Auction settings set, preparing to launch invoke");
+
+        let ix = spl_token::instruction::transfer(
+            ctx.accounts.token_program.key,
+            ctx.accounts.from_token_account.key,
+            ctx.accounts.to_token_account.key,
+            ctx.accounts.seller.key,
+            &[ctx.accounts.seller.key],
+            1,
+        )?;
+        invoke(
+            &ix,
+            &[
+                ctx.accounts.from_token_account.clone(),
+                ctx.accounts.to_token_account.clone(),
+                ctx.accounts.seller.clone(),
+                ctx.accounts.token_program.clone(),
+            ],
+        )?;
         
+        msg!("Invoke done, create_auction function ab samapt hua");
+
         Ok(())
     }
 
@@ -42,7 +95,33 @@ pub mod auction {
 
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
         auction_account.buyer = *ctx.accounts.buyer.key;
+        let sol_amount = auction_account.cost * 1000000000;
 
+        if ctx.accounts.seller.key() == auction_account.seller {
+            invoke(
+                &system_instruction::transfer(ctx.accounts.buyer.key, &auction_account.seller, sol_amount),
+                &[ctx.accounts.buyer.clone(), ctx.accounts.seller.clone()],
+            )?;
+        } 
+            
+        msg!("inside if while transferring NFT");
+        let ix = spl_token::instruction::transfer(
+            ctx.accounts.token_program.key,
+            ctx.accounts.from_token_account.key,
+            ctx.accounts.to_token_account.key,
+            ctx.accounts.vault.key,
+            &[ctx.accounts.vault.key],
+            1,
+        )?;
+        invoke(
+            &ix,
+            &[
+                ctx.accounts.from_token_account.clone(),
+                ctx.accounts.to_token_account.clone(),
+                ctx.accounts.vault.clone(),
+                ctx.accounts.token_program.clone(),
+            ],
+        )?;
 
         Ok(())
     }
@@ -82,7 +161,7 @@ pub mod auction {
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
         auction_account.is_on_sale = false;
         auction_account.cost = 0;
-        // auction_account.max_bid = 0;
+        auction_account.highest_bid = 0;
         auction_account.primary_sale_happened = true;
         
         Ok(())
@@ -96,7 +175,7 @@ pub mod auction {
         msg!("final bid to lamports done {}", final_bid_to_lamports);
 
         msg!("Checking condition and preparing to launch invoke to transfer sol");
-        if ctx.accounts.seller.key() == ctx.accounts.auction_account.seller {
+        if ctx.accounts.seller.key() == auction_account.seller {
             msg!("inside if while transferring sol");
         invoke(
             &system_instruction::transfer(ctx.accounts.vault.key, &ctx.accounts.auction_account.seller, final_bid_to_lamports),
@@ -157,6 +236,14 @@ pub struct Initialze<'info> {
     #[account(mut)]
     /// CHECK XYZ
     mint: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK xyz
+    pub from_token_account: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK xyz
+    pub to_token_account: AccountInfo<'info>,
+    /// CHECK xyz
+    pub token_program: AccountInfo<'info>,
     #[account(address = system_program::id())]
     /// CHECK XYZ
     system_program: AccountInfo<'info>,
@@ -179,8 +266,16 @@ pub struct CreateAuction<'info> {
     #[account(mut,signer)]
     /// CHECK XYZ
     seller:AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK xyz
+    pub from_token_account: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK xyz
+    pub to_token_account: AccountInfo<'info>,
     /// CHECK checked in program
     mint:AccountInfo<'info>,
+    /// CHECK xyz
+    pub token_program: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
@@ -199,9 +294,27 @@ pub struct BuyNFT<'info> {
     auction_account: Account<'info, AuctionManager>,
     /// CHECK checked in program
     mint:AccountInfo<'info>,
-    #[account(mut)]
+    #[account(mut, signer)]
     /// CHECK XYZ
     buyer: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK xyz
+    pub from_token_account: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK xyz
+    pub to_token_account: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK XYZ
+    seller:AccountInfo<'info>,
+    #[account(mut, signer)]
+    /// CHECK XYZ
+    vault: AccountInfo<'info>,
+    /// CHECK xyz
+    pub token_program: AccountInfo<'info>,
+    #[account(address = system_program::id())]
+    /// CHECK XYZ
+    system_program: AccountInfo<'info>,
+    
 }
 
 #[derive(Accounts)]
@@ -278,7 +391,7 @@ pub struct EndEnglishAuction<'info> {
     /// CHECK XYZ
     vault: AccountInfo<'info>,
     #[account(mut)]
-    /// CHECK XYZ
+    /// CHECK XYZxx 
     seller: AccountInfo<'info>,
     /// CHECK xyz
     pub token_program: AccountInfo<'info>,

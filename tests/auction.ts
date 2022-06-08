@@ -5,7 +5,7 @@ import { Auction } from "../target/types/auction";
 import * as web3 from "@solana/web3.js";
 import BN from "bn.js"
 import { program } from "@project-serum/anchor/dist/cjs/spl/token";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 describe("auction", () => {
 
@@ -62,18 +62,18 @@ describe("auction", () => {
       },
     });
 
-     const txEndEnglishAuction = await program.rpc.endEnglishAuction(bump, {
-        accounts: {
-          auctionAccount: auctionAccount,
-          mint: mintKey,
-          toAccount: wallet.publicKey,
-          fromTokenAccount: fromTokenAccount,
-          toTokenAccount: toTokenAccount,
-          vault: vault.publicKey,
-          seller: account.seller,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: web3.SystemProgram.programId
-        },
-      });
+    //  const txEndEnglishAuction = await program.rpc.endEnglishAuction(bump, {
+    //     accounts: {
+    //       auctionAccount: auctionAccount,
+    //       mint: mintKey,
+    //       toAccount: AccountLayout.highestBidder,
+    //       fromTokenAccount: fromTokenAccount,
+    //       toTokenAccount: toTokenAccount,
+    //       vault: vault.publicKey,
+    //       seller: account.seller,
+    //       tokenProgram: TOKEN_PROGRAM_ID,
+    //       systemProgram: web3.SystemProgram.programId
+    //     },
+    //   });
   });
 });
