@@ -8,6 +8,7 @@ use solana_program::{
 declare_id!("2b1sK3RkQBPPdLhJ67N2M7XiBj8gEX7ysPeGxadBQBRp");
 
 const AUCTION_SIGNER_SEEDS: &str = "yaxche";
+const LAMPORTS_PER_SOL:u64 = 1000000000;
 
 #[program]
 pub mod auction {
@@ -93,18 +94,23 @@ pub mod auction {
 
     pub fn buy_nft(ctx: Context<BuyNFT>, _bump:u8) -> Result<()> {
 
+        msg!("Buy NFT called");
+
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
         auction_account.buyer = *ctx.accounts.buyer.key;
-        let sol_amount = auction_account.cost * 1000000000;
+        let sol_amount = auction_account.cost * LAMPORTS_PER_SOL;
+
+        msg!("Transferring sol");
 
         if ctx.accounts.seller.key() == auction_account.seller {
             invoke(
-                &system_instruction::transfer(ctx.accounts.buyer.key, &auction_account.seller, sol_amount),
-                &[ctx.accounts.buyer.clone(), ctx.accounts.seller.clone()],
+                &system_instruction::transfer(ctx.accounts.buyer.key, ctx.accounts.vault.key, sol_amount),
+                &[ctx.accounts.buyer.clone(), ctx.accounts.vault.clone()],
             )?;
         } 
             
-        msg!("inside if while transferring NFT");
+        msg!("Sol recieved in Vault, Transferring NFT to the buyer");
+        
         let ix = spl_token::instruction::transfer(
             ctx.accounts.token_program.key,
             ctx.accounts.from_token_account.key,
@@ -122,6 +128,46 @@ pub mod auction {
                 ctx.accounts.token_program.clone(),
             ],
         )?;
+
+        if auction_account.primary_sale_happened == false {
+            
+            msg!("Primary sale not happened");
+
+            invoke(
+                &system_instruction::transfer(ctx.accounts.vault.key, &auction_account.seller, sol_amount),
+                &[ctx.accounts.vault.clone(), ctx.accounts.seller.clone()],
+            )?;
+
+        } else {
+
+            if auction_account.royalty_percent == 0 {
+
+                msg!("Primary sale happened but royalty percent is 0");
+
+                invoke(
+                    &system_instruction::transfer(ctx.accounts.vault.key, &auction_account.seller, sol_amount),
+                    &[ctx.accounts.vault.clone(), ctx.accounts.seller.clone()],
+                )?;
+
+            } else {
+
+                msg!("Primar same happened and royalty percent non 0");
+
+                let send_sol_to_creator = (auction_account.cost * auction_account.royalty_percent as u64) * LAMPORTS_PER_SOL/100;
+                invoke(
+                    &system_instruction::transfer(ctx.accounts.vault.key, &auction_account.royalty_owner, send_sol_to_creator),
+                    &[ctx.accounts.vault.clone(), ctx.accounts.creator.clone()],
+                )?;
+                
+                msg!("One sol sent, sending two sol");
+
+                let send_sol_to_seller = sol_amount - send_sol_to_creator;
+                invoke(
+                    &system_instruction::transfer(ctx.accounts.vault.key, &auction_account.seller, send_sol_to_seller),
+                    &[ctx.accounts.vault.clone(), ctx.accounts.seller.clone()],
+                )?;
+            }
+        }
 
         Ok(())
     }
@@ -171,7 +217,7 @@ pub mod auction {
 
         msg!("Welcome to end english auction function");
         let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
-        let final_bid_to_lamports = auction_account.highest_bid * 1000000000;
+        let final_bid_to_lamports = auction_account.highest_bid * LAMPORTS_PER_SOL;
         msg!("final bid to lamports done {}", final_bid_to_lamports);
 
         msg!("Checking condition and preparing to launch invoke to transfer sol");
@@ -306,6 +352,9 @@ pub struct BuyNFT<'info> {
     #[account(mut)]
     /// CHECK XYZ
     seller:AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK XYZ
+    creator:AccountInfo<'info>,
     #[account(mut, signer)]
     /// CHECK XYZ
     vault: AccountInfo<'info>,
@@ -409,7 +458,7 @@ pub struct AuctionManager {
     buyer: Pubkey, // 32
     is_on_sale: bool, // 1
     royalty_percent:u8, // 1
-    royalty_owner: Pubkey, // 32
+    royalty_owner: Pubkey, // 32 change name to creator
     primary_sale_happened: bool, //1
     highest_bid: u64, // 8
     highest_bidder: Pubkey, // 32
