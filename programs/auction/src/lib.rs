@@ -5,7 +5,7 @@ use solana_program::{
     program::invoke,
 };
 
-declare_id!("2b1sK3RkQBPPdLhJ67N2M7XiBj8gEX7ysPeGxadBQBRp");
+declare_id!("G1cr8ubixaosck66PGR9wyyZbTsSzTnxRVhV4FYn5AqX");
 
 const AUCTION_SIGNER_SEEDS: &str = "yaxche";
 const LAMPORTS_PER_SOL:u64 = 1000000000;
@@ -169,6 +169,11 @@ pub mod auction {
             }
         }
 
+        auction_account.is_on_sale = false;
+        auction_account.cost = 0;
+        auction_account.highest_bid = 0;
+        auction_account.primary_sale_happened = true;
+
         Ok(())
     }
 
@@ -191,24 +196,13 @@ pub mod auction {
 
         msg!("Preparing to launch invoke");
 
-        let bid_to_lamports = bid * 1000000000;
+        let bid_to_lamports = bid * LAMPORTS_PER_SOL;
         invoke(
             &system_instruction::transfer(ctx.accounts.bidder.key, ctx.accounts.vault.key, bid_to_lamports),
             &[ctx.accounts.bidder.clone(), ctx.accounts.vault.clone()],
         )?;
 
         msg!("The line after invoke, please check funds. fn bid samapt hua");
-        
-        Ok(())
-    }
-    
-    pub fn end_auction(ctx: Context<EndAuction>, _bump:u8) -> Result<()> {
-
-        let auction_account: &mut Account<AuctionManager> = &mut ctx.accounts.auction_account;
-        auction_account.is_on_sale = false;
-        auction_account.cost = 0;
-        auction_account.highest_bid = 0;
-        auction_account.primary_sale_happened = true;
         
         Ok(())
     }
@@ -391,24 +385,6 @@ pub struct Bid<'info> {
     #[account(address = system_program::id())]
     /// CHECK XYZ
     system_program: AccountInfo<'info>,
-}
-
-#[derive(Accounts)]
-#[instruction(bump:u8)]
-pub struct EndAuction<'info> {
-    #[account(
-    mut,
-    seeds = [
-        "auction".as_bytes(),
-        program_id.as_ref(),
-        mint.key().as_ref(),
-        AUCTION_SIGNER_SEEDS.as_bytes(),
-    ],
-    bump,
-    )]
-    auction_account: Account<'info, AuctionManager>,
-    /// CHECK checked in program
-    mint:AccountInfo<'info>,
 }
 
 #[derive(Accounts)]

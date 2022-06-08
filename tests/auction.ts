@@ -53,16 +53,93 @@ describe("auction", () => {
 
     console.log("Your transaction signature", program);
 
-    const txInit = await program.rpc.initialize(price, bump, royalty, {
-      accounts: {
-        auctionAccount: auctionAccount,
-        seller: wallet.publicKey,
-        mint: mint,
-        systemProgram: web3.SystemProgram.programId,
-      },
-    });
+    // // initialize.ts
+    // const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+    //   wallet,
+    //   connection,
+    //   mint,
+    //   wallet.publicKey,
+    //   );
+      
+    // let vault = new anchor.web3.PublicKey('3JjB4argD3AiCBehM3u2CcHqAAtTaBcQgEMhh5Y5C8R2');
+    // const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+    //   wallet,
+    //   connection,
+    //   mint,
+    //   vault,
+    //   );
+    // const txInit = await program.rpc.initialize(price, bump, royalty, {
+    //   accounts: {
+    //     auctionAccount: auctionAccount,
+    //     seller: wallet.publicKey,
+    //     mint: mint,
+    //     fromTokenAccount: fromTokenAccount.publicKey,
+    //     toTokenAccount: toTokenAccount.publicKey,
+    //     tokenProgram: TOKEN_PROGRAM_ID,
+    //     systemProgram: web3.SystemProgram.programId,
+    //   },
+    // });
 
-    //  const txEndEnglishAuction = await program.rpc.endEnglishAuction(bump, {
+    // // createAuction.ts
+    // const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+    //   wallet,
+    //   connection,
+    //   mint,
+    //   wallet.publicKey,
+    //   );
+      
+    // let vault = new anchor.web3.PublicKey('3JjB4argD3AiCBehM3u2CcHqAAtTaBcQgEMhh5Y5C8R2');
+    // const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+    //   wallet,
+    //   connection,
+    //   mint,
+    //   vault,
+    //   );
+      
+    //   const tx = await program.rpc.createAuction(price, bump, {
+    //     accounts: {
+    //       auctionAccount: auctionAccount,
+    //       seller: wallet.publicKey,
+    //       mint: mint,
+    //       fromTokenAccount: fromTokenAccount.publicKey,
+    //       toTokenAccount: toTokenAccount.publicKey,
+    //       tokenProgram: TOKEN_PROGRAM_ID,
+    //       systemProgram: anchor.web3.SystemProgram.programId,
+    //     },
+    //   });
+
+    //   // buyNft.ts
+    //   let vault = new anchor.web3.PublicKey('3JjB4argD3AiCBehM3u2CcHqAAtTaBcQgEMhh5Y5C8R2');
+    //   const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+    //     wallet,
+    //     connection,
+    //     mint,
+    //     vault,
+    //     );
+        
+    //   const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+    //     wallet,
+    //     connection,
+    //     mint,
+    //     wallet.publicKey,
+    //     );
+        
+    //     const tx = await program.rpc.buyNft(bump, {
+    //       accounts: {
+    //         auctionAccount: auctionAccount,
+    //         mint: mint,
+    //         buyer: wallet.publicKey,
+    //         fromTokenAccount: fromTokenAccount.address,
+    //         toTokenAccount: toTokenAccount.address,
+    //         seller: account.seller,
+    //         creator: account.royaltyOwner,
+    //         vault: vault.publicKey,
+    //         tokenProgram: TOKEN_PROGRAM_ID,
+    //         systemProgram: anchor.web3.SystemProgram.programId,
+    //       },
+    //     });
+  
+      //  const txEndEnglishAuction = await program.rpc.endEnglishAuction(bump, {
     //     accounts: {
     //       auctionAccount: auctionAccount,
     //       mint: mintKey,
