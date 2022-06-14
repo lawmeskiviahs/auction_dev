@@ -48,7 +48,7 @@ describe("auction", () => {
       auctionAccount: auctionAccount,
       seller: seller.publicKey,
       mint: mint,
-      // systemProgram: web3.SystemProgram.programId,
+      // systemProgram: web3.SystemProgram.programId, 
     }).signers([seller]).rpc();
 
     console.log("Your transaction signature", program);

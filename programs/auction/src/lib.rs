@@ -30,6 +30,8 @@ pub mod auction {
         auction_account.royalty_percent = royalty;
         auction_account.primary_sale_happened = false;
 
+        msg!("Cost of NFT is {}", auction_account.cost);
+
         msg!("Auction settings set, preparing to launch invoke");
 
         let ix = spl_token::instruction::transfer(
@@ -100,7 +102,8 @@ pub mod auction {
         auction_account.buyer = *ctx.accounts.buyer.key;
         let sol_amount = auction_account.cost * LAMPORTS_PER_SOL;
 
-        msg!("Transferring sol");
+        msg!("Transferring {} units", sol_amount);
+        msg!("Cost of NFT is {}", auction_account.cost);
 
         if ctx.accounts.seller.key() == auction_account.seller {
             invoke(
@@ -151,7 +154,7 @@ pub mod auction {
 
             } else {
 
-                msg!("Primar same happened and royalty percent non 0");
+                msg!("Primary same happened and royalty percent non 0");
 
                 let send_sol_to_creator = (auction_account.cost * auction_account.royalty_percent as u64) * LAMPORTS_PER_SOL/100;
                 invoke(
