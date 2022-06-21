@@ -15,10 +15,10 @@ const LAMPORTS_PER_SOL:u64 = 1000000000;
 pub mod auction {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialze>, mut price:i64, _bump:u8, royalty:u8) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialze>, price:i64, _bump:u8, royalty:u8) -> Result<()> {
 
 
-        if price < 0 { &mut price = |price| } 
+        // if price < 0 { &mut price = |price| } 
 
         msg!("Welcome to initialize function");
 
