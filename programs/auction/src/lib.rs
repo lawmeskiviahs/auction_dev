@@ -8,13 +8,17 @@ use solana_program::{
 declare_id!("G1cr8ubixaosck66PGR9wyyZbTsSzTnxRVhV4FYn5AqX");
 
 const AUCTION_SIGNER_SEEDS: &str = "yaxche";
+const BID_SIGNER_SEEDS: &str = "bidtesthuehue";
 const LAMPORTS_PER_SOL:u64 = 1000000000;
 
 #[program]
 pub mod auction {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialze>, price:u64, _bump:u8, royalty:u8) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialze>, mut price:i64, _bump:u8, royalty:u8) -> Result<()> {
+
+
+        if price < 0 { &mut price = |price| } 
 
         msg!("Welcome to initialize function");
 
@@ -23,7 +27,7 @@ pub mod auction {
         msg!("auctionAccount PDA loaded successfully");
 
         auction_account.seller = *ctx.accounts.seller.key;
-        auction_account.cost = price;
+        auction_account.cost = price as u64;
         auction_account.mint = *ctx.accounts.mint.key;
         auction_account.is_on_sale = true;
         auction_account.royalty_owner = *ctx.accounts.seller.key;
@@ -189,9 +193,10 @@ pub mod auction {
         if bid > auction_account.highest_bid {
 
             msg!("Bid value checked and it currently is {}", auction_account.highest_bid);
+
             auction_account.highest_bid=bid;
-            // auction_account.highest_bid+=bid;
             msg!("auction_account.highest_bid set to {}", auction_account.highest_bid);
+
             auction_account.highest_bidder= ctx.accounts.bidder.key();
             msg!("auction_account.highest_bidder set");
 
@@ -204,6 +209,9 @@ pub mod auction {
             &system_instruction::transfer(ctx.accounts.bidder.key, ctx.accounts.vault.key, bid_to_lamports),
             &[ctx.accounts.bidder.clone(), ctx.accounts.vault.clone()],
         )?;
+
+        let bids = &mut ctx.accounts.bid_account.bid_info;
+        bids.push(BidderData{bidder:ctx.accounts.bidder.key(), bid:bid, is_cancelled:false});
 
         msg!("The line after invoke, please check funds. fn bid samapt hua");
         
@@ -273,6 +281,18 @@ pub struct Initialze<'info> {
             ], 
         bump)]
     auction_account: Account<'info, AuctionManager>,
+    #[account(
+        init, 
+        payer = seller, 
+        space = 1000,
+        seeds = [
+            "bid".as_bytes(),
+            auction_account.key().as_ref(),
+            program_id.as_ref(),
+            BID_SIGNER_SEEDS.as_bytes(),
+            ], 
+        bump)]
+    bid_account: Account<'info, BidVecAccount>,
     #[account(mut, signer)]
     /// CHECK XYZ
     seller:AccountInfo<'info>,
@@ -377,6 +397,17 @@ pub struct Bid<'info> {
     bump,
     )]
     auction_account: Account<'info, AuctionManager>,
+    #[account(
+        mut,
+        seeds = [
+            "bid".as_bytes(),
+            auction_account.key().as_ref(),
+            program_id.as_ref(),
+            BID_SIGNER_SEEDS.as_bytes(),
+        ],
+        bump,
+        )]
+        bid_account: Account<'info, BidVecAccount>,
     /// CHECK checked in program
     mint:AccountInfo<'info>,
     #[account(mut,signer)]
@@ -441,4 +472,17 @@ pub struct AuctionManager {
     primary_sale_happened: bool, //1
     highest_bid: u64, // 8
     highest_bidder: Pubkey, // 32
+}
+
+#[account]
+pub struct BidVecAccount {
+    bid_info: Vec<BidderData>,
+}
+
+#[derive(Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct BidderData {
+    bidder: Pubkey,
+    bid: u64,
+    is_cancelled: bool,
 }
